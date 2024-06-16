@@ -55,10 +55,16 @@ type TransferTxResult struct {
 	ToEntry     Entry    `json:"to_entry"`
 }
 
+var txKey = struct{}{}
+
 func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
 	err := store.execTx(ctx, func(q *Queries) error {
 		var err error
+
+		txName := ctx.Value(txKey)
+
+		fmt.Println(txName, "create transfer")
 		result.Transfer, err = q.createTransfer(ctx, createTransferParams{
 			FromAccountID: arg.FromAccountID,
 			ToAccountID:   arg.ToAccountID,
@@ -68,7 +74,7 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 		if err != nil {
 			return err
 		}
-
+		fmt.Println(txName, "create entry")
 		result.FromEntry, err = q.createEntry(ctx, createEntryParams{
 			AccountID: arg.FromAccountID,
 			Amount:    -arg.Amount,
@@ -78,6 +84,7 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 			return err
 		}
 
+		fmt.Println(txName, "create entry")
 		result.ToEntry, err = q.createEntry(ctx, createEntryParams{
 			AccountID: arg.ToAccountID,
 			Amount:    arg.Amount,
@@ -88,6 +95,38 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 		}
 
 		// Update account balances
+
+		// fmt.Println(txName, "get account 1")
+		// account1, err := q.getAccountForUpdate(ctx, arg.FromAccountID)
+		// if err != nil {
+		// 	return err
+		// }
+
+		fmt.Println(txName, "update account 2")
+		result.FromAccount, err = q.updateAccountBalance(ctx, updateAccountBalanceParams{
+			ID:      arg.FromAccountID,
+			Balance: -arg.Amount,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		// fmt.Println(txName, "get account 2")
+		// account2, err := q.getAccountForUpdate(ctx, arg.ToAccountID)
+		// if err != nil {
+		// 	return err
+		// }
+
+		fmt.Println(txName, "update account 2")
+		result.ToAccount, err = q.updateAccountBalance(ctx, updateAccountBalanceParams{
+			ID:      arg.ToAccountID,
+			Balance: arg.Amount,
+		})
+
+		if err != nil {
+			return err
+		}
 
 		return nil
 	})
