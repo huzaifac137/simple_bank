@@ -13,6 +13,25 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: qwerty7867
+          POSTGRES_DB: simple_bank
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+
+
     steps:
     - uses: actions/checkout@v4
 
@@ -24,5 +43,11 @@ jobs:
     # - name: Build
     #   run: go build -v ./...
 
+    - name: Install Golang migrate
+      run: |
+        wget http://github.com/golang-migrate/migrate/releases/latest/download/migrate.linux-amd64.deb
+        sudo dpkg -i migrate.linux-amd64.deb
+    - name: Run Databse Migrations
+      run:  migrate -path ./db/migration -database "postgresql://postgres:qwerty7867@localhost:5432/simple_bank?sslmode=disable" up
     - name: Test
       run: go test -v -cover ./...
