@@ -22,13 +22,13 @@ INSERT INTO accounts (
 ) RETURNING id, owner, balance, currency, "createdAt"
 `
 
-type createAccountParams struct {
+type CreateAccountParams struct {
 	Owner    string `json:"owner"`
 	Balance  int64  `json:"balance"`
 	Currency string `json:"currency"`
 }
 
-func (q *Queries) createAccount(ctx context.Context, arg createAccountParams) (Account, error) {
+func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) {
 	row := q.db.QueryRowContext(ctx, createAccount, arg.Owner, arg.Balance, arg.Currency)
 	var i Account
 	err := row.Scan(
@@ -55,7 +55,7 @@ const getAccount = `-- name: getAccount :one
 SELECT id, owner, balance, currency, "createdAt" FROM accounts WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) getAccount(ctx context.Context, id int64) (Account, error) {
+func (q *Queries) GetAccount(ctx context.Context, id int64) (Account, error) {
 	row := q.db.QueryRowContext(ctx, getAccount, id)
 	var i Account
 	err := row.Scan(
@@ -96,12 +96,12 @@ LIMIT $1
 OFFSET $2
 `
 
-type listAccountsParams struct {
+type ListAccountsParams struct {
 	Limit  int32 `json:"limit"`
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) listAccounts(ctx context.Context, arg listAccountsParams) ([]Account, error) {
+func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]Account, error) {
 	rows, err := q.db.QueryContext(ctx, listAccounts, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
