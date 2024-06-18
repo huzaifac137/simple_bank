@@ -37,6 +37,7 @@ func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 		return err
 	}
 	return tx.Commit()
+
 }
 
 // TransferTx performs money transfer transactions for queries
