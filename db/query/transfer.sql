@@ -1,5 +1,5 @@
 
--- name: createTransfer :one
+-- name: CreateTransfer :one
 
 INSERT INTO transfers (
     from_account_id,
@@ -11,5 +11,5 @@ INSERT INTO transfers (
     $3
 ) RETURNING *;
 
--- name: getTransfer :one
+-- name: GetTransfer :one
 SELECT * FROM transfers WHERE id = $1 LIMIT 1;

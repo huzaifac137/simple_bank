@@ -51,7 +51,7 @@ func TestTransferTx(t *testing.T) {
 		require.NotZero(t, result.Transfer.ID)
 		require.NotZero(t, result.Transfer.CreatedAt)
 
-		_, err = store.getTransfer(context.Background(), result.Transfer.ID)
+		_, err = store.GetTransfer(context.Background(), result.Transfer.ID)
 		require.NoError(t, err)
 
 		fromEntry := result.FromEntry
@@ -59,7 +59,7 @@ func TestTransferTx(t *testing.T) {
 		require.Equal(t, account1.ID, fromEntry.AccountID)
 		require.Equal(t, -amount, fromEntry.Amount)
 
-		_, err = store.getEntry(context.Background(), fromEntry.ID)
+		_, err = store.GetEntry(context.Background(), fromEntry.ID)
 		require.NoError(t, err)
 
 		toEntry := result.ToEntry
@@ -67,7 +67,7 @@ func TestTransferTx(t *testing.T) {
 		require.Equal(t, account2.ID, toEntry.AccountID)
 		require.Equal(t, amount, toEntry.Amount)
 
-		_, err = store.getEntry(context.Background(), toEntry.ID)
+		_, err = store.GetEntry(context.Background(), toEntry.ID)
 		require.NoError(t, err)
 
 		// check accounts

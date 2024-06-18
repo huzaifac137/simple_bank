@@ -1,4 +1,4 @@
--- name: createAccount :one
+-- name: CreateAccount :one
 
 INSERT INTO accounts (
     owner ,
@@ -10,10 +10,10 @@ INSERT INTO accounts (
     $3
 ) RETURNING *;
 
--- name: getAccount :one
+-- name: GetAccount :one
 SELECT * FROM accounts WHERE id = $1 LIMIT 1;
 
--- name: listAccounts :many
+-- name: ListAccounts :many
 SELECT * FROM accounts
 ORDER BY id 
 LIMIT $1
@@ -25,17 +25,17 @@ SET balance = $2
 WHERE id = $1
 RETURNING *;
 
--- name: updateAccountBalance :one
+-- name: UpdateAccountBalance :one
 UPDATE accounts
 SET balance = balance + $2
 WHERE id = $1
 RETURNING *;
 
--- name: deleteAccount :exec
+-- name: DeleteAccount :exec
 DELETE FROM accounts
 WHERE id = $1;
 
--- name: getAccountForUpdate :one
+-- name: GetAccountForUpdate :one
 
 SELECT * FROM accounts
 WHERE id = $1

@@ -76,7 +76,7 @@ func (s *Server) listAccounts(ctx *gin.Context) {
 		Offset: int32((req.Page_Id - 1) * req.Page_Size),
 	}
 
-	accounts, err := s.store.Queries.ListAccounts(ctx, params)
+	accounts, err := s.store.ListAccounts(ctx, params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))

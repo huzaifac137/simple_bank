@@ -9,7 +9,7 @@ import (
 	"context"
 )
 
-const createEntry = `-- name: createEntry :one
+const createEntry = `-- name: CreateEntry :one
 INSERT INTO entries (
     account_id,
     amount
@@ -19,12 +19,12 @@ INSERT INTO entries (
 ) RETURNING id, account_id, amount, "createdAt"
 `
 
-type createEntryParams struct {
+type CreateEntryParams struct {
 	AccountID int64 `json:"account_id"`
 	Amount    int64 `json:"amount"`
 }
 
-func (q *Queries) createEntry(ctx context.Context, arg createEntryParams) (Entry, error) {
+func (q *Queries) CreateEntry(ctx context.Context, arg CreateEntryParams) (Entry, error) {
 	row := q.db.QueryRowContext(ctx, createEntry, arg.AccountID, arg.Amount)
 	var i Entry
 	err := row.Scan(
@@ -36,12 +36,12 @@ func (q *Queries) createEntry(ctx context.Context, arg createEntryParams) (Entry
 	return i, err
 }
 
-const getEntry = `-- name: getEntry :one
+const getEntry = `-- name: GetEntry :one
 
 SELECT id, account_id, amount, "createdAt" FROM entries WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) getEntry(ctx context.Context, id int64) (Entry, error) {
+func (q *Queries) GetEntry(ctx context.Context, id int64) (Entry, error) {
 	row := q.db.QueryRowContext(ctx, getEntry, id)
 	var i Entry
 	err := row.Scan(
