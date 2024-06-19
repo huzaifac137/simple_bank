@@ -32,12 +32,15 @@ func NewServer(store db.Store) *Server {
 
 	postRouter := router.Group("/api/accounts")
 	transferRouter := router.Group("/api/transfers")
+	userRouter := router.Group("/api/users")
 
 	postRouter.POST("/", server.createAccount)
 	postRouter.GET("/:id", server.getAccount)
 	postRouter.GET("/", server.listAccounts)
 
 	transferRouter.POST("/", server.CreateTransfer)
+
+	userRouter.POST("/", server.createUser)
 	server.router = router
 	return server
 }
