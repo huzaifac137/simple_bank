@@ -23,7 +23,7 @@ func main() {
 
 	store := db.NewStore(conn)
 
-	server := api.NewServer(store)
+	server := api.NewServer(config.SymmetricKey, store)
 	e := server.Start(config.ServerAddress)
 	if e != nil {
 		log.Fatal("cannot start server: ", e)

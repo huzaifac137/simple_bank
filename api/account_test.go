@@ -23,7 +23,7 @@ func TestGetAccountApi(t *testing.T) {
 	store.EXPECT().GetAccount(gomock.Any(), account.ID).Times(1).Return(*account, nil)
 
 	// satrt http mock server
-	server := NewServer(store)
+	server := NewTestServer(store)
 	recorder := httptest.NewRecorder()
 
 	url := fmt.Sprintf("/api/accounts/%d", account.ID)

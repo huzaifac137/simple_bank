@@ -8,13 +8,16 @@ import (
 )
 
 type Server struct {
-	store  db.Store
-	router *gin.Engine
+	symmetricKey string
+	store        db.Store
+	router       *gin.Engine
 }
 
-func NewServer(store db.Store) *Server {
+func NewServer(symmetricKey string, store db.Store) *Server {
+
 	server := &Server{
-		store: store,
+		store:        store,
+		symmetricKey: symmetricKey,
 	}
 
 	router := gin.Default()
@@ -41,6 +44,7 @@ func NewServer(store db.Store) *Server {
 	transferRouter.POST("/", server.CreateTransfer)
 
 	userRouter.POST("/", server.createUser)
+	userRouter.POST("/login", server.LoginUser)
 	server.router = router
 	return server
 }
