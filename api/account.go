@@ -2,10 +2,12 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	db "github.com/huzaifac137/simple_bank/db/sqlc"
+	"github.com/huzaifac137/simple_bank/token"
 )
 
 type createAccountRequest struct {
@@ -17,6 +19,14 @@ func (s *Server) createAccount(ctx *gin.Context) {
 	var req createAccountRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	loggedInUserPayload := ctx.MustGet(authorizationHeaderPayload).(*token.Payload)
+
+	if loggedInUserPayload.Username != req.Owner {
+		err := fmt.Errorf("you are not authorized owner to create this account : %v", req.Owner)
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 
@@ -46,6 +56,8 @@ func (s *Server) getAccount(ctx *gin.Context) {
 		return
 	}
 
+	loggedInUserPayload := ctx.MustGet(authorizationHeaderPayload).(*token.Payload)
+
 	account, err := s.store.GetAccount(ctx, req.Id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -55,6 +67,12 @@ func (s *Server) getAccount(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
+	}
+
+	if loggedInUserPayload.Username != account.Owner {
+		err := fmt.Errorf("You are not authorized owner to get this account : %v", account.Owner)
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
 	}
 
 	ctx.JSON(http.StatusOK, account)
@@ -71,7 +89,10 @@ func (s *Server) listAccounts(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 	}
 
+	loggedInUserPayload := ctx.MustGet(authorizationHeaderPayload).(*token.Payload)
+
 	params := db.ListAccountsParams{
+		Owner:  loggedInUserPayload.Username,
 		Limit:  int32(req.Page_Size),
 		Offset: int32((req.Page_Id - 1) * req.Page_Size),
 	}

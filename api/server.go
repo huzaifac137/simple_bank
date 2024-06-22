@@ -1,10 +1,13 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	db "github.com/huzaifac137/simple_bank/db/sqlc"
+	"github.com/huzaifac137/simple_bank/token"
 )
 
 type Server struct {
@@ -33,8 +36,13 @@ func NewServer(symmetricKey string, store db.Store) *Server {
 		v.RegisterValidation("currency", customCurrencyValidator)
 	}
 
-	postRouter := router.Group("/api/accounts")
-	transferRouter := router.Group("/api/transfers")
+	maker, err := token.NewPasetoMaker(symmetricKey)
+	if err != nil {
+		fmt.Printf("error creating New Maker , %s", err.Error())
+	}
+
+	postRouter := router.Group("/api/accounts").Use(AuthMiddleware(maker))
+	transferRouter := router.Group("/api/transfers").Use(AuthMiddleware(maker))
 	userRouter := router.Group("/api/users")
 
 	postRouter.POST("/", server.createAccount)

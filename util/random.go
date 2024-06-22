@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var randomInt = rand.New(rand.NewSource(42))
+var randomInt = rand.New(rand.NewSource(1000))
 
 const alphabet = "abcdefghijklmnopqrstuvwxyz"
 

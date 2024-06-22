@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	db "github.com/huzaifac137/simple_bank/db/sqlc"
+	"github.com/huzaifac137/simple_bank/token"
 )
 
 type createTransferRequest struct {
@@ -20,6 +21,24 @@ func (s *Server) CreateTransfer(ctx *gin.Context) {
 	var req createTransferRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	loggedInUserPayload := ctx.MustGet(authorizationHeaderPayload).(*token.Payload)
+	account, err := s.store.GetAccount(ctx, req.FromAccountId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+
+	}
+
+	if account.Owner != loggedInUserPayload.Username {
+		err := fmt.Errorf("you are not authorized owner to transfer from this account : %v", account.Owner)
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 

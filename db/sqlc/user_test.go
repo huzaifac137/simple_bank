@@ -11,7 +11,7 @@ import (
 
 func CreateRandomUser(t *testing.T) User {
 	arg := CreateUserParams{
-		Username:       util.RandomOwner(),
+		Username:       util.RandomString(20),
 		HashedPassword: "secret",
 		FullName:       util.RandomOwner(),
 		Email:          util.RandomEmail(),
