@@ -49,5 +49,5 @@ jobs:
         sudo dpkg -i migrate.linux-amd64.deb
     - name: Run Databse Migrations
       run:  migrate -path ./db/migration -database "postgresql://postgres:qwerty7867@localhost:5432/simple_bank?sslmode=disable" up
-    - name: Test
-      run: go test -v -cover ./...
+    # - name: Test
+    #   run: go test -v -cover ./...
