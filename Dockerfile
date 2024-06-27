@@ -7,14 +7,18 @@ RUN curl -L  https://github.com/golang-migrate/migrate/releases/download/v4.14.1
 
 FROM alpine:3.20
 WORKDIR /app
+COPY start.sh .
+RUN chmod +x /app/start.sh
 COPY --from=builder /app/main .
 COPY --from=builder /app/migrate.linux-amd64 /app/migrate
 #Copy env
 COPY app.env .
-COPY start.sh .
 COPY db/migration /app/migration
+# Run the database migration
+# RUN /app/migrate -path /app/migration -database "${DB_URL}" -verbose up
 EXPOSE 8080
 CMD [ "/app/main" ]
+
 # entrypoint becomes the main entry and CMD becomes arguments passed to the entrypoint
 ENTRYPOINT [ "/app/start.sh" ]
 

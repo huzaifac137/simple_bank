@@ -12,7 +12,9 @@ services:
       - POSTGRES_PASSWORD=qwerty7867
       - POSTGRES_DB=simple_bank_db
   api:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     environment:
