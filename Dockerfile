@@ -19,6 +19,7 @@ COPY db/migration /app/migration
 EXPOSE 8080
 CMD [ "/app/main" ]
 
+
 # entrypoint becomes the main entry and CMD becomes arguments passed to the entrypoint
 ENTRYPOINT [ "/app/start.sh" ]
 
