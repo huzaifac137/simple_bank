@@ -12,6 +12,7 @@ import (
 
 type Server struct {
 	symmetricKey string
+	tokenMaker   token.Maker
 	store        db.Store
 	router       *gin.Engine
 }
@@ -36,10 +37,12 @@ func NewServer(symmetricKey string, store db.Store) *Server {
 		v.RegisterValidation("currency", customCurrencyValidator)
 	}
 
-	maker, err := token.NewPasetoMaker(symmetricKey)
+	maker, err := token.NewJWTMaker(symmetricKey)
 	if err != nil {
 		fmt.Printf("error creating New Maker , %s", err.Error())
 	}
+
+	server.tokenMaker = maker
 
 	postRouter := router.Group("/api/accounts").Use(AuthMiddleware(maker))
 	transferRouter := router.Group("/api/transfers").Use(AuthMiddleware(maker))
@@ -53,6 +56,8 @@ func NewServer(symmetricKey string, store db.Store) *Server {
 
 	userRouter.POST("/", server.createUser)
 	userRouter.POST("/login", server.LoginUser)
+
+	router.POST("/api/tokens/renew-access", server.RenewAccessToken)
 	server.router = router
 	return server
 }
