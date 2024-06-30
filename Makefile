@@ -34,3 +34,7 @@ db:
 golang: 
       docker run -p 8080:8080 --name simple_bank_app -e DB_SOURCE="postgresql://postgres:qwerty7867@172.18.0.2:5433/simple_bank_db?sslmode=disable" -d simple_bank:latest
    
+proto:
+      protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
+      --go-grpc_out=pb --go-grpc_opt=paths=source_relative \
+      proto/*.proto
