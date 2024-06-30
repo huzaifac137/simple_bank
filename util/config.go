@@ -3,10 +3,11 @@ package util
 import "github.com/spf13/viper"
 
 type Config struct {
-	DBDriver      string `mapstructure:"DB_DRIVER"`
-	DBSource      string `mapstructure:"DB_SOURCE"`
-	ServerAddress string `mapstructure:"SERVER_ADDRESS"`
-	SymmetricKey  string `mapstructure:"SYMMETRIC_KEY"`
+	DBDriver          string `mapstructure:"DB_DRIVER"`
+	DBSource          string `mapstructure:"DB_SOURCE"`
+	ServerAddress     string `mapstructure:"SERVER_ADDRESS"`
+	GRPCServerAddress string `mapstructure:"GRPC_SERVER_ADDRESS"`
+	SymmetricKey      string `mapstructure:"SYMMETRIC_KEY"`
 }
 
 func LoadConfig(path string) (config *Config, err error) {
