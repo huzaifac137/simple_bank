@@ -3,6 +3,7 @@ package gapi
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	db "github.com/huzaifac137/simple_bank/db/sqlc"
@@ -39,12 +40,16 @@ func (s *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.L
 		return nil, status.Errorf(codes.Internal, "Something went wrong: %s", err)
 	}
 
+	metadata := s.ExtractMetadata(ctx)
+
+	fmt.Printf("metadata: %+v\n", metadata)
+
 	session, err := s.store.CreateSession(ctx, db.CreateSessionParams{
 		ID:           refreshPayload.Id,
 		Username:     user.Username,
 		RefreshToken: refreshToken,
-		UserAgent:    "",
-		ClientIp:     "",
+		UserAgent:    metadata.UserAgent,
+		ClientIp:     metadata.ClientIp,
 		IsBlocked:    false,
 		ExpiresAt:    refreshPayload.ExpiredAt,
 	})
