@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"net"
+	"net/http"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/huzaifac137/simple_bank/api"
 	db "github.com/huzaifac137/simple_bank/db/sqlc"
 	gapi "github.com/huzaifac137/simple_bank/gapi"
@@ -27,7 +30,7 @@ func main() {
 
 	store := db.NewStore(conn)
 
-	//runGinServer(config, store)
+	go runGRPCGatewayServer(config, store)
 	runGRPCServer(config, store)
 
 }
@@ -58,5 +61,34 @@ func runGRPCServer(config *util.Config, store db.Store) {
 
 	if err != nil {
 		log.Fatalf("gRPC server failed: %v", err)
+	}
+}
+
+func runGRPCGatewayServer(config *util.Config, store db.Store) {
+	server := gapi.NewServer(config.SymmetricKey, store)
+
+	// create grpc muxxer to direct requests to grpc server
+	grpcMux := runtime.NewServeMux()
+	ctx, cncl := context.WithCancel(context.Background())
+	defer cncl()
+	er := pb.RegisterSimpleBankHandlerServer(ctx, grpcMux, server)
+	if er != nil {
+		log.Fatalf("Failed to register gprc/http gateway handler: %v", er)
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/", grpcMux)
+
+	lis, err := net.Listen("tcp", config.ServerAddress)
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
+	}
+
+	log.Println("Starting GRPC/HTTP GATEWAY server on", config.ServerAddress)
+
+	err = http.Serve(lis, mux)
+
+	if err != nil {
+		log.Fatalf("grpc/http gateway server failed: %v", err)
 	}
 }

@@ -38,5 +38,13 @@ proto:
       protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
       --go-grpc_out=pb --go-grpc_opt=paths=source_relative \
       proto/*.proto
+
 grpc_client:
           grpc-client-cli --proto proto/ localhost:9090   
+
+proto_with_gateway:
+                protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
+      --go-grpc_out=pb --go-grpc_opt=paths=source_relative \
+	  --grpc-gateway_out=pb --grpc-gateway_opt=paths=source_relative \
+      proto/*.proto
+               
