@@ -79,6 +79,9 @@ func runGRPCGatewayServer(config *util.Config, store db.Store) {
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcMux)
 
+	fs := http.FileServer(http.Dir("./swagger"))
+	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fs))
+
 	lis, err := net.Listen("tcp", config.ServerAddress)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
