@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"embed"
 	"log"
 	"net"
 	"net/http"
@@ -16,6 +17,9 @@ import (
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 )
+
+//go:embed swagger/*
+var swaggerFiles embed.FS
 
 func main() {
 	config, err := util.LoadConfig(".")
@@ -79,7 +83,7 @@ func runGRPCGatewayServer(config *util.Config, store db.Store) {
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcMux)
 
-	fs := http.FileServer(http.Dir("./swagger"))
+	fs := http.FileServer(http.FS(swaggerFiles))
 	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fs))
 
 	lis, err := net.Listen("tcp", config.ServerAddress)
