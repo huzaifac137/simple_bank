@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -10,9 +11,13 @@ import (
 )
 
 func CreateRandomUser(t *testing.T) User {
+	hashed, err := util.HashPassword("secret")
+	if err != nil {
+		fmt.Println("Error in hashing password")
+	}
 	arg := CreateUserParams{
 		Username:       util.RandomString(20),
-		HashedPassword: "secret",
+		HashedPassword: hashed,
 		FullName:       util.RandomOwner(),
 		Email:          util.RandomEmail(),
 	}

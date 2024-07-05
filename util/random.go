@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+	"time"
 )
 
-var randomInt = rand.New(rand.NewSource(1000))
+var randomInt = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
