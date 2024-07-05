@@ -7,14 +7,21 @@ import (
 	"time"
 
 	db "github.com/huzaifac137/simple_bank/db/sqlc"
+	"github.com/huzaifac137/simple_bank/grpc_util"
 	"github.com/huzaifac137/simple_bank/pb"
 	"github.com/huzaifac137/simple_bank/util"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (s *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
+	// Validate the request
+	voilations := loginUserValidation(req)
+	if voilations != nil {
+		return nil, InvalidArgumentError(voilations)
+	}
 
 	user, err := s.store.GetUser(ctx, req.GetUsername())
 	if err != nil {
@@ -68,4 +75,19 @@ func (s *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.L
 	}
 
 	return res, nil
+}
+
+func loginUserValidation(req *pb.LoginUserRequest) (voilations []*errdetails.BadRequest_FieldViolation) {
+	err := grpc_util.ValidateUsername(req.GetUsername())
+	if err != nil {
+		voilations = append(voilations, FieldVoilation("username", err))
+	}
+
+	err = grpc_util.ValidatePassword(req.GetPassword())
+	if err != nil {
+		voilations = append(voilations, FieldVoilation("password", err))
+	}
+
+	return voilations
+
 }
