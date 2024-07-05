@@ -2,20 +2,18 @@ FROM golang:alpine3.20 AS builder
 WORKDIR /app
 COPY . .
 RUN go build -o main main.go
-RUN apk add curl
-RUN curl -L  https://github.com/golang-migrate/migrate/releases/download/v4.14.1/migrate.linux-amd64.tar.gz | tar xvz
+# RUN apk add curl
+# RUN curl -L  https://github.com/golang-migrate/migrate/releases/download/v4.14.1/migrate.linux-amd64.tar.gz | tar xvz
 
 FROM alpine:3.20
 WORKDIR /app
 COPY start.sh .
 RUN chmod +x /app/start.sh
 COPY --from=builder /app/main .
-COPY --from=builder /app/migrate.linux-amd64 /app/migrate
+# COPY --from=builder /app/migrate.linux-amd64 /app/migrate
 #Copy env
 COPY app.env .
-COPY db/migration /app/migration
-# Run the database migration
-# RUN /app/migrate -path /app/migration -database "${DB_URL}" -verbose up
+COPY db/migration /app/db/migration
 EXPOSE 8080
 CMD [ "/app/main" ]
 

@@ -4,10 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"embed"
+	"errors"
 	"log"
 	"net"
 	"net/http"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/huzaifac137/simple_bank/api"
 	db "github.com/huzaifac137/simple_bank/db/sqlc"
@@ -31,6 +35,8 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot connect to db: ", err)
 	}
+
+	RunDBMigrations(config)
 
 	store := db.NewStore(conn)
 
@@ -98,4 +104,19 @@ func runGRPCGatewayServer(config *util.Config, store db.Store) {
 	if err != nil {
 		log.Fatalf("grpc/http gateway server failed: %v", err)
 	}
+}
+
+func RunDBMigrations(config *util.Config) {
+	migrateIns, err := migrate.New("file://db/migration", config.DBSource)
+	if err != nil {
+		log.Fatal("cannot create migration instance: ", err)
+	}
+
+	err = migrateIns.Up()
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		log.Fatal("cannot migrate database: ", err)
+	}
+
+	log.Println("Database migrations completed successfully")
+
 }
