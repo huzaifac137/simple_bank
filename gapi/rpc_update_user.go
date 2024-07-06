@@ -14,13 +14,24 @@ import (
 )
 
 func (s *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
+
+	// authorization
+	payload, err := s.AuthorizerUser(ctx)
+	if err != nil {
+		return nil, UnAuthenticatedUserError(err)
+	}
+
+	if payload.Username != req.GetUsername() {
+		return nil, status.Errorf(codes.PermissionDenied, "Unauthorized to update user: %s", req.GetUsername())
+	}
+
 	// Validate the request
 	voilations := UpdateUserValidation(req)
 	if voilations != nil {
 		return nil, InvalidArgumentError(voilations)
 	}
 
-	_, err := s.store.GetUser(ctx, req.GetUsername())
+	_, err = s.store.GetUser(ctx, req.GetUsername())
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, status.Errorf(codes.NotFound, "User not found: %s", err)

@@ -10,7 +10,7 @@ import (
 )
 
 type Server struct {
-	pb.UnimplementedSimpleBankServer
+	pb.SimpleBankServer
 	symmetricKey string
 	tokenMaker   token.Maker
 	store        db.Store
@@ -32,10 +32,4 @@ func NewServer(symmetricKey string, store db.Store) *Server {
 	server.tokenMaker = maker
 
 	return server
-}
-
-func errorResponse(err error) *gin.H {
-	return &gin.H{
-		"error": err.Error(),
-	}
 }
