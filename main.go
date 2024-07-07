@@ -101,7 +101,8 @@ func runGRPCGatewayServer(config *util.Config, store db.Store) {
 
 	log.Info().Str("host:port", config.ServerAddress).Msg("Starting grpc/http gateway server ")
 
-	err = http.Serve(lis, mux)
+	handler := gapi.HTTPLogger(mux)
+	err = http.Serve(lis, handler)
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("grpc/http gateway server failed")
