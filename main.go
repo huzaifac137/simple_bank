@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog/log"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -19,6 +20,7 @@ import (
 	gapi "github.com/huzaifac137/simple_bank/gapi"
 	"github.com/huzaifac137/simple_bank/pb"
 	"github.com/huzaifac137/simple_bank/util"
+	"github.com/huzaifac137/simple_bank/worker"
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 )
@@ -40,9 +42,16 @@ func main() {
 	RunDBMigrations(config)
 
 	store := db.NewStore(conn)
+	redisOpt := asynq.RedisClientOpt{
+		Addr: config.RedisServerAddress,
+	}
+	newTaskDistributor := worker.NewRedisTaskDistributor(redisOpt)
 
-	go runGRPCGatewayServer(config, store)
-	runGRPCServer(config, store)
+	newTaskProcessor := worker.NewRedisTaskProcessor(redisOpt, store)
+	go newTaskProcessor.Start()
+
+	go runGRPCGatewayServer(config, store, newTaskDistributor)
+	runGRPCServer(config, store, newTaskDistributor)
 
 }
 
@@ -54,8 +63,9 @@ func runGinServer(config *util.Config, store db.Store) {
 	}
 }
 
-func runGRPCServer(config *util.Config, store db.Store) {
-	server := gapi.NewServer(config.SymmetricKey, store)
+func runGRPCServer(config *util.Config, store db.Store, taskDistributer worker.TaskDistributor) {
+
+	server := gapi.NewServer(config.SymmetricKey, store, taskDistributer)
 
 	unaryInterceptorOpt := gapi.GRPCUnaryInterceptor()
 	grpcServer := grpc.NewServer(*unaryInterceptorOpt)
@@ -76,8 +86,8 @@ func runGRPCServer(config *util.Config, store db.Store) {
 	}
 }
 
-func runGRPCGatewayServer(config *util.Config, store db.Store) {
-	server := gapi.NewServer(config.SymmetricKey, store)
+func runGRPCGatewayServer(config *util.Config, store db.Store, taskDistributor worker.TaskDistributor) {
+	server := gapi.NewServer(config.SymmetricKey, store, taskDistributor)
 
 	// create grpc muxxer to direct requests to grpc server
 	grpcMux := runtime.NewServeMux()

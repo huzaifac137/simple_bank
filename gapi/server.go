@@ -7,21 +7,24 @@ import (
 	db "github.com/huzaifac137/simple_bank/db/sqlc"
 	"github.com/huzaifac137/simple_bank/pb"
 	"github.com/huzaifac137/simple_bank/token"
+	"github.com/huzaifac137/simple_bank/worker"
 )
 
 type Server struct {
 	pb.SimpleBankServer
-	symmetricKey string
-	tokenMaker   token.Maker
-	store        db.Store
-	router       *gin.Engine
+	symmetricKey    string
+	tokenMaker      token.Maker
+	store           db.Store
+	router          *gin.Engine
+	taskDistributer worker.TaskDistributor
 }
 
-func NewServer(symmetricKey string, store db.Store) *Server {
+func NewServer(symmetricKey string, store db.Store, taskDistributer worker.TaskDistributor) *Server {
 
 	server := &Server{
-		store:        store,
-		symmetricKey: symmetricKey,
+		store:           store,
+		symmetricKey:    symmetricKey,
+		taskDistributer: taskDistributer,
 	}
 
 	maker, err := token.NewJWTMaker(symmetricKey)

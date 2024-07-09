@@ -3,10 +3,12 @@ package gapi
 import (
 	"context"
 
+	"github.com/hibiken/asynq"
 	db "github.com/huzaifac137/simple_bank/db/sqlc"
 	"github.com/huzaifac137/simple_bank/grpc_util"
 	"github.com/huzaifac137/simple_bank/pb"
 	"github.com/huzaifac137/simple_bank/util"
+	"github.com/huzaifac137/simple_bank/worker"
 	"github.com/lib/pq"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
@@ -45,6 +47,11 @@ func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb
 		}
 
 	}
+
+	// send task to queue
+	taskPayload := &worker.SendVerifyEmailPayload{Username: user.Username}
+	options := []asynq.Option{}
+	s.taskDistributer.DistributeSendVerifyEmail(ctx, taskPayload, options...)
 	res := &pb.CreateUserResponse{
 		User: ConvertUser(&user),
 	}

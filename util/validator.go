@@ -7,3 +7,4 @@ func IsValidCurrency(currency string) bool {
 	}
 	return false
 }
+
