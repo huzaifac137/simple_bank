@@ -14,6 +14,11 @@ type RedisTaskDistributor struct {
 	client *asynq.Client
 }
 
+const (
+	CriticalQueue = "critical"
+	DefaultQueue  = "default"
+)
+
 func NewRedisTaskDistributor(opts asynq.RedisClientOpt) TaskDistributor {
 	return &RedisTaskDistributor{
 		client: asynq.NewClient(opts),

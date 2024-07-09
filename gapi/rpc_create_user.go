@@ -50,7 +50,10 @@ func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb
 
 	// send task to queue
 	taskPayload := &worker.SendVerifyEmailPayload{Username: user.Username}
-	options := []asynq.Option{}
+	options := []asynq.Option{
+		asynq.MaxRetry(10),
+		asynq.Queue(worker.CriticalQueue),
+	}
 	s.taskDistributer.DistributeSendVerifyEmail(ctx, taskPayload, options...)
 	res := &pb.CreateUserResponse{
 		User: ConvertUser(&user),
