@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/hibiken/asynq"
+	"github.com/huzaifac137/simple_bank/util"
 	"github.com/rs/zerolog/log"
 )
 
@@ -53,6 +54,10 @@ func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Cont
 	}
 
 	// Send verification email to the user
+	er := util.SendEmail(user.Email)
+	if er != nil {
+		log.Error().Err(er).Str("user_email", user.Email).Msg("failed to send verification email")
+	}
 	log.Info().Str("task_type", task.Type()).Bytes("task_payload", task.Payload()).Str("user_email", user.Email).Msg("processed the task")
 
 	return nil
