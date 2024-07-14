@@ -16,6 +16,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/huzaifac137/simple_bank/api"
+	"github.com/huzaifac137/simple_bank/cron_job"
 	db "github.com/huzaifac137/simple_bank/db/sqlc"
 	gapi "github.com/huzaifac137/simple_bank/gapi"
 	"github.com/huzaifac137/simple_bank/pb"
@@ -49,6 +50,11 @@ func main() {
 
 	newTaskProcessor := worker.NewRedisTaskProcessor(redisOpt, store)
 	go newTaskProcessor.Start()
+
+	er := cron_job.CronJob()
+	if er != nil {
+		log.Fatal().Err(er).Msg("Error starting cron job")
+	}
 
 	go runGRPCGatewayServer(config, store, newTaskDistributor)
 	runGRPCServer(config, store, newTaskDistributor)
