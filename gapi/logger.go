@@ -2,12 +2,26 @@ package gapi
 
 import (
 	"context"
+	"fmt"
+	"net"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
+)
+
+type Client struct {
+	limiter  *rate.Limiter
+	lastSeen time.Time
+}
+
+var (
+	mutex   sync.Mutex
+	clients = make(map[string]*Client)
 )
 
 func GRPCUnaryInterceptor() *grpc.ServerOption {
@@ -48,11 +62,48 @@ func (rec *ResponseRecoder) WriteHeader(statusCode int) {
 	rec.ResponseWriter.WriteHeader(statusCode)
 }
 
-func HTTPLogger(handler http.Handler) http.Handler {
+func HTTPLoggerRateLimiter(handlerFunc func(w http.ResponseWriter, r *http.Request)) http.Handler {
+
+	go func() {
+		time.Sleep(1 * time.Minute)
+		mutex.Lock()
+		for ip, client := range clients {
+			if time.Since(client.lastSeen) > 3*time.Minute {
+				delete(clients, ip)
+			}
+		}
+		mutex.Unlock()
+	}()
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		fmt.Print("HTTPLoggerRateLimiter 1   !!!!!!")
+		ip, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to get IP address from request")
+
+		}
+
+		mutex.Lock()
+		fmt.Print("HTTPLoggerRateLimiter 2  !!!!!!")
+		if _, ok := clients[ip]; !ok {
+			clients[ip] = &Client{
+				limiter: rate.NewLimiter(1, 6),
+			}
+		}
+
+		clients[ip].lastSeen = time.Now()
+		if !clients[ip].limiter.Allow() {
+			mutex.Unlock()
+			log.Error().Msg("Too many requests, rate limiter!")
+			http.Error(w, "Too many requests, please try again later.", http.StatusTooManyRequests)
+			return
+		}
+		mutex.Unlock()
+
 		startTime := time.Now()
 		rec := &ResponseRecoder{w, http.StatusOK}
-		handler.ServeHTTP(rec, r)
+		handlerFunc(rec, r)
 		timeTaken := time.Since(startTime)
 
 		logger := log.Info()

@@ -93,6 +93,7 @@ func runGRPCServer(config *util.Config, store db.Store, taskDistributer worker.T
 }
 
 func runGRPCGatewayServer(config *util.Config, store db.Store, taskDistributor worker.TaskDistributor) {
+
 	server := gapi.NewServer(config.SymmetricKey, store, taskDistributor)
 
 	// create grpc muxxer to direct requests to grpc server
@@ -105,6 +106,10 @@ func runGRPCGatewayServer(config *util.Config, store db.Store, taskDistributor w
 	}
 
 	mux := http.NewServeMux()
+	muxAsFunc := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mux.ServeHTTP(w, r)
+	})
+
 	mux.Handle("/", grpcMux)
 
 	fs := http.FileServer(http.FS(swaggerFiles))
@@ -117,7 +122,7 @@ func runGRPCGatewayServer(config *util.Config, store db.Store, taskDistributor w
 
 	log.Info().Str("host:port", config.ServerAddress).Msg("Starting grpc/http gateway server ")
 
-	handler := gapi.HTTPLogger(mux)
+	handler := gapi.HTTPLoggerRateLimiter(muxAsFunc)
 	err = http.Serve(lis, handler)
 
 	if err != nil {
