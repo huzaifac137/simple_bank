@@ -1,16 +1,20 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	db "github.com/huzaifac137/simple_bank/db/sqlc"
+	"github.com/huzaifac137/simple_bank/token"
 )
 
 func NewTestServer(store db.Store) *Server {
 
 	server := &Server{
-		store: store,
+		store:        store,
+		symmetricKey: "12345678901234567890123456789012",
 	}
 
 	router := gin.Default()
@@ -26,8 +30,16 @@ func NewTestServer(store db.Store) *Server {
 		v.RegisterValidation("currency", customCurrencyValidator)
 	}
 
-	postRouter := router.Group("/api/accounts")
-	transferRouter := router.Group("/api/transfers")
+	maker, err := token.NewJWTMaker("12345678901234567890123456789012")
+	if err != nil {
+		fmt.Printf("error creating New Maker , %s", err.Error())
+
+	}
+
+	server.tokenMaker = maker
+
+	postRouter := router.Group("/api/accounts").Use(AuthMiddleware(maker))
+	transferRouter := router.Group("/api/transfers").Use(AuthMiddleware(maker))
 	userRouter := router.Group("/api/users")
 
 	postRouter.POST("/", server.createAccount)
@@ -37,6 +49,9 @@ func NewTestServer(store db.Store) *Server {
 	transferRouter.POST("/", server.CreateTransfer)
 
 	userRouter.POST("/", server.createUser)
+	userRouter.POST("/login", server.LoginUser)
+
+	router.POST("/api/tokens/renew-access", server.RenewAccessToken)
 	server.router = router
 	return server
 }

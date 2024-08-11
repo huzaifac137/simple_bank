@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -147,6 +148,7 @@ func (s *Server) LoginUser(ctx *gin.Context) {
 	})
 
 	if err != nil {
+		fmt.Printf("error creating session: %s", err.Error())
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
